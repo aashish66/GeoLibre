@@ -395,6 +395,21 @@ export {
   setAnnotationLabels,
   type AnnotationLabels,
 } from "./plugins/maplibre-annotations";
+export {
+  maplibreDimensionsPlugin,
+  DIMENSIONS_PLUGIN_ID,
+  DIMENSIONS_SOURCE_KIND,
+  DIMENSION_UNITS,
+  setDimensionLabels,
+  metersToUnit,
+  formatDistance,
+  formatAngle,
+  flattenFeatureVertices,
+  resolveTiePosition,
+  type DimensionLabels,
+  type DimensionUnit,
+  type DimensionTie,
+} from "./plugins/maplibre-dimensions";
 export { maplibreEnviroAtlasPlugin } from "./plugins/maplibre-enviroatlas";
 export { maplibreEsriWaybackPlugin } from "./plugins/maplibre-esri-wayback";
 export { maplibreFemaWmsPlugin } from "./plugins/maplibre-fema-wms";

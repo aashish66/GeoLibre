@@ -1254,6 +1254,100 @@ body,
 }
 
 /*
+ * Dimension tools control. Same plain `.maplibregl-ctrl-group` chrome as the
+ * Annotation tools control above, plus the unit and "tie to layer" <select>
+ * elements the Dimension toolbar adds.
+ */
+.geolibre-dimensions-control {
+  --geolibre-dimensions-cell-size: 29px;
+  background-color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.geolibre-dimensions-control .geolibre-dimensions-tools {
+  display: flex;
+  flex-direction: column;
+}
+
+.geolibre-dimensions-control .geolibre-dimensions-tools[hidden] {
+  display: none;
+}
+
+.geolibre-dimensions-control button {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  display: flex !important;
+  height: var(--geolibre-dimensions-cell-size);
+  justify-content: center;
+  padding: 0;
+  width: var(--geolibre-dimensions-cell-size);
+}
+
+.geolibre-dimensions-control button > svg {
+  display: block;
+  flex: 0 0 auto;
+  margin: 0 auto;
+}
+
+.geolibre-dimensions-control button:not(.is-active):hover {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.geolibre-dimensions-control button.is-active {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.geolibre-dimensions-control button.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.geolibre-dimensions-control .geolibre-dimensions-collapse {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.geolibre-dimensions-control.is-collapsed .geolibre-dimensions-collapse {
+  border-bottom: 0;
+}
+
+.geolibre-dimensions-control .geolibre-dimensions-tools button + button,
+.geolibre-dimensions-control .geolibre-dimensions-width,
+.geolibre-dimensions-control .geolibre-dimensions-color,
+.geolibre-dimensions-control .geolibre-dimensions-unit {
+  border-top: 1px solid hsl(var(--border));
+}
+
+.geolibre-dimensions-control .geolibre-dimensions-color {
+  border: none;
+  border-top: 1px solid hsl(var(--border));
+  cursor: pointer;
+  height: 24px;
+  margin: 2px auto;
+  padding: 0;
+  width: 24px;
+}
+
+.geolibre-dimensions-control .geolibre-dimensions-unit {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  font-size: 11px;
+  min-width: 110px;
+  max-width: 160px;
+  padding: 4px;
+}
+
+/*
  * The Measure, Bookmark and View State controls theme themselves purely via
  * `@media (prefers-color-scheme)`, so they follow the OS preference instead of
  * GeoLibre's in-app light/dark toggle (the `.dark` class on <html>). When the

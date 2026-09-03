@@ -2895,6 +2895,7 @@
     },
     "plugin": {
       "maplibre-gl-annotations": "Annotations",
+      "maplibre-gl-dimensions": "Dimensions",
       "maplibre-gl-streetview": "Street View",
       "maplibre-gl-time-slider": "Time Slider",
       "geolibre-timelapse": "Timelapse",
@@ -3964,6 +3965,26 @@
     "saveElement": "Save Element",
     "atPoint": "At Point",
     "pinnedToExtent": "Pinned to Extent"
+  },
+  "dimensions": {
+    "toolbar": "Dimension tools",
+    "layerName": "Dimensions",
+    "tools": {
+      "linear": "Linear dimension",
+      "angular": "Angular dimension"
+    },
+    "unit": "Unit",
+    "snap": "Snap to vertices",
+    "color": "Dimension color",
+    "width": "Line width",
+    "widthOptions": {
+      "thin": "Thin",
+      "medium": "Medium",
+      "thick": "Thick"
+    },
+    "deleteLast": "Delete last dimension",
+    "clearAll": "Clear all dimensions",
+    "newLayer": "New dimension layer"
   },
   "pythonConsole": {
     "title": "Python Console",

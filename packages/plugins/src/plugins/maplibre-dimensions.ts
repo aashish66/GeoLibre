@@ -1287,7 +1287,8 @@ function recomputeAssociativeDimensions(layers: GeoLibreLayer[]): void {
       const ties = props?.ties as (DimensionTie | null)[] | undefined;
       if (!label || !ties || !ties.some(Boolean)) continue;
 
-      const points = props!.points as Position[];
+      const points = props?.points as Position[] | undefined;
+      if (!Array.isArray(points) || points.length !== ties.length) continue;
       const resolved = points.map((point, index) => {
         const tie = ties[index];
         if (!tie) return point;

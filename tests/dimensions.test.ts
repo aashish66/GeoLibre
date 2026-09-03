@@ -9,6 +9,7 @@ import {
   formatDistance,
   maplibreDimensionsPlugin,
   metersToUnit,
+  parseAssociativeDimension,
   resolveTiePosition,
   setDimensionLabels,
 } from "../packages/plugins/src/plugins/maplibre-dimensions";
@@ -152,6 +153,80 @@ describe("resolveTiePosition", () => {
       [layer],
     );
     assert.equal(position, null);
+  });
+});
+
+describe("parseAssociativeDimension", () => {
+  const validTie = { layerId: "vector-1", featureId: null, featureIndex: 0, vertexIndex: 0 };
+
+  it("accepts a well-formed linear record with at least one tie", () => {
+    const parsed = parseAssociativeDimension({
+      __dimension: "linear",
+      ties: [validTie, null],
+      points: [
+        [0, 0],
+        [1, 1],
+      ],
+    });
+    assert.ok(parsed);
+    assert.equal(parsed?.kind, "linear");
+    assert.equal(parsed?.points.length, 2);
+  });
+
+  it("rejects an angular record with only one tie and one point (mismatched count)", () => {
+    // Regression: a dimension layer loaded from a saved project or external
+    // GeoJSON could claim __dimension: "angular" (which needs 3 points) while
+    // only carrying 1 tie/point. Without validating the count against `kind`,
+    // recomputeAssociativeDimensions would pass `undefined` coordinates into
+    // buildAngularDimensionFeatures.
+    const parsed = parseAssociativeDimension({
+      __dimension: "angular",
+      ties: [validTie],
+      points: [[0, 0]],
+    });
+    assert.equal(parsed, null);
+  });
+
+  it("rejects a record with a null or malformed point entry", () => {
+    const parsed = parseAssociativeDimension({
+      __dimension: "linear",
+      ties: [validTie, null],
+      points: [null, [1, 1]],
+    });
+    assert.equal(parsed, null);
+  });
+
+  it("rejects a record whose ties are not an array", () => {
+    const parsed = parseAssociativeDimension({
+      __dimension: "linear",
+      ties: "not-an-array",
+      points: [
+        [0, 0],
+        [1, 1],
+      ],
+    });
+    assert.equal(parsed, null);
+  });
+
+  it("rejects a record with no non-null ties (nothing to recompute)", () => {
+    const parsed = parseAssociativeDimension({
+      __dimension: "linear",
+      ties: [null, null],
+      points: [
+        [0, 0],
+        [1, 1],
+      ],
+    });
+    assert.equal(parsed, null);
+  });
+
+  it("rejects a record with an unrecognized __dimension kind", () => {
+    const parsed = parseAssociativeDimension({
+      __dimension: "unknown",
+      ties: [validTie],
+      points: [[0, 0]],
+    });
+    assert.equal(parsed, null);
   });
 });
 

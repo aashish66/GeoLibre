@@ -147,6 +147,53 @@ export function resolveTiePosition(
   return vertices[tie.vertexIndex] ?? null;
 }
 
+/** A validated, narrowed `points`/`ties` pair, ready for {@link recomputeAssociativeDimensions} to rebuild. */
+export interface ParsedAssociativeDimension {
+  kind: DimensionTool;
+  points: Position[];
+  ties: (DimensionTie | null)[];
+}
+
+/**
+ * Validate a dimension label feature's properties into the shape
+ * {@link recomputeAssociativeDimensions} needs: `points`/`ties` arrays of the
+ * length `__dimension` implies (2 for "linear", 3 for "angular"), every point
+ * a finite `[lng, lat]` pair, and at least one non-null tie (nothing to
+ * recompute otherwise). Returns null for anything else — in particular a
+ * Dimensions layer loaded from a saved project or external GeoJSON whose
+ * fields don't match, which would otherwise pass `undefined` coordinates (or
+ * throw calling `.some` on a non-array `ties`) into the rebuild.
+ */
+export function parseAssociativeDimension(
+  props: Record<string, unknown> | undefined,
+): ParsedAssociativeDimension | null {
+  const kind = props?.__dimension;
+  const expectedPointCount = kind === "angular" ? 3 : kind === "linear" ? 2 : null;
+  if (expectedPointCount === null) return null;
+
+  const ties = props?.ties;
+  if (!Array.isArray(ties) || ties.length !== expectedPointCount || !ties.some(Boolean)) {
+    return null;
+  }
+
+  const points = props?.points;
+  if (
+    !Array.isArray(points) ||
+    points.length !== expectedPointCount ||
+    points.some(
+      (point) =>
+        !Array.isArray(point) ||
+        point.length < 2 ||
+        !Number.isFinite(point[0]) ||
+        !Number.isFinite(point[1]),
+    )
+  ) {
+    return null;
+  }
+
+  return { kind, points: points as Position[], ties: ties as (DimensionTie | null)[] };
+}
+
 /** A vector layer with at least one feature is a valid snap source; raster/tile layers and Dimension layers are not. */
 function isSnapCandidateLayer(layer: GeoLibreLayer): boolean {
   if (isDimensionLayer(layer)) return false;
@@ -1283,24 +1330,12 @@ function recomputeAssociativeDimensions(layers: GeoLibreLayer[]): void {
       const label = parts.find(
         (part) => (part.properties as Record<string, unknown> | null)?.__dimensionPart === "label",
       );
-      const props = label?.properties as Record<string, unknown> | undefined;
-      const ties = props?.ties as (DimensionTie | null)[] | undefined;
-      if (!label || !ties || !ties.some(Boolean)) continue;
+      if (!label) continue;
+      const props = label.properties as Record<string, unknown> | undefined;
+      const parsed = parseAssociativeDimension(props);
+      if (!parsed) continue;
+      const { kind, points, ties } = parsed;
 
-      const points = props?.points as Position[] | undefined;
-      if (
-        !Array.isArray(points) ||
-        points.length !== ties.length ||
-        points.some(
-          (point) =>
-            !Array.isArray(point) ||
-            point.length < 2 ||
-            !Number.isFinite(point[0]) ||
-            !Number.isFinite(point[1]),
-        )
-      ) {
-        continue;
-      }
       const resolved = points.map((point, index) => {
         const tie = ties[index];
         if (!tie) return point;
@@ -1308,7 +1343,6 @@ function recomputeAssociativeDimensions(layers: GeoLibreLayer[]): void {
       });
       if (resolved.every((point, index) => positionsEqual(point, points[index]))) continue;
 
-      const kind = props!.__dimension as DimensionTool;
       const color = (props!.color as string) ?? strokeColor;
       const width = (props!.width as number) ?? strokeWidth;
       const unit = (props!.unit as DimensionUnit) ?? activeUnit;

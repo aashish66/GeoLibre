@@ -406,9 +406,11 @@ export {
   formatAngle,
   flattenFeatureVertices,
   resolveTiePosition,
+  parseAssociativeDimension,
   type DimensionLabels,
   type DimensionUnit,
   type DimensionTie,
+  type ParsedAssociativeDimension,
 } from "./plugins/maplibre-dimensions";
 export { maplibreEnviroAtlasPlugin } from "./plugins/maplibre-enviroatlas";
 export { maplibreEsriWaybackPlugin } from "./plugins/maplibre-esri-wayback";

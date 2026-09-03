@@ -407,6 +407,7 @@ export {
   flattenFeatureVertices,
   resolveTiePosition,
   parseAssociativeDimension,
+  spliceRebuiltDimensionGroups,
   type DimensionLabels,
   type DimensionUnit,
   type DimensionTie,

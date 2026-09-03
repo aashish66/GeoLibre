@@ -983,7 +983,9 @@ function handleLinearClick(map: maplibregl.Map, point: Position, tie: DimensionT
     pendingTies = [pendingTies[0], tie];
     return;
   }
-  // Third click: free placement of the dimension line's offset (never snapped).
+  // Third click: free placement of the dimension line's offset. Its own snap
+  // (if the cursor lands near a vertex) is discarded — only its screen
+  // position feeds the offset below, no tie is recorded for it.
   const offsetPx = signedPerpendicularOffsetPx(map, pendingPoints[0], pendingPoints[1], point);
   const features = buildLinearDimensionFeatures(
     map,
@@ -1304,6 +1306,33 @@ function positionsEqual(a: Position, b: Position): boolean {
 }
 
 /**
+ * Replace each rebuilt dimension's features in place, at the array position
+ * of its first part in `features`, instead of appending rebuilt groups to
+ * the end. `deleteLastDimension` (and any other array-position-based
+ * reasoning about "most recently created") relies on a dimension's position
+ * reflecting creation order, which a recompute must not disturb — the
+ * dimension being recomputed is not necessarily the one most recently drawn.
+ */
+export function spliceRebuiltDimensionGroups(
+  features: Feature[],
+  rebuiltByGroup: ReadonlyMap<string, Feature[]>,
+): Feature[] {
+  const emitted = new Set<string>();
+  const next: Feature[] = [];
+  for (const feature of features) {
+    const id = (feature.properties as Record<string, unknown> | null)?.dimensionId;
+    if (typeof id === "string" && rebuiltByGroup.has(id)) {
+      if (emitted.has(id)) continue;
+      emitted.add(id);
+      next.push(...rebuiltByGroup.get(id)!);
+      continue;
+    }
+    next.push(feature);
+  }
+  return next;
+}
+
+/**
  * Recompute every dimension whose endpoints are tied to a vertex that has
  * moved. Runs on every store `layers` change (matching the broad subscription
  * Annotations uses for its HTML markers); a dimension with no ties, or whose
@@ -1379,11 +1408,7 @@ function recomputeAssociativeDimensions(layers: GeoLibreLayer[]): void {
     }
 
     if (rebuiltByGroup.size === 0) continue;
-    const untouched = features.filter((feature) => {
-      const id = (feature.properties as Record<string, unknown> | null)?.dimensionId;
-      return !(typeof id === "string" && rebuiltByGroup.has(id));
-    });
-    const nextFeatures = [...untouched, ...[...rebuiltByGroup.values()].flat()];
+    const nextFeatures = spliceRebuiltDimensionGroups(features, rebuiltByGroup);
     useAppStore.getState().updateLayer(layer.id, {
       geojson: { type: "FeatureCollection", features: nextFeatures },
     });

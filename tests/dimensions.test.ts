@@ -12,6 +12,7 @@ import {
   parseAssociativeDimension,
   resolveTiePosition,
   setDimensionLabels,
+  spliceRebuiltDimensionGroups,
 } from "../packages/plugins/src/plugins/maplibre-dimensions";
 import type { GeoLibreAppAPI } from "../packages/plugins/src/types";
 import type { GeoLibreLayer } from "../packages/core/src/types";
@@ -227,6 +228,52 @@ describe("parseAssociativeDimension", () => {
       points: [[0, 0]],
     });
     assert.equal(parsed, null);
+  });
+});
+
+describe("spliceRebuiltDimensionGroups", () => {
+  function dimFeature(dimensionId: string, part = "label"): Feature {
+    return {
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [0, 0] },
+      properties: { dimensionId, __dimensionPart: part },
+    };
+  }
+
+  it("replaces a rebuilt group in place instead of moving it to the end", () => {
+    // Regression: recomputeAssociativeDimensions used to append rebuilt
+    // groups to the end of the feature array, which broke
+    // deleteLastDimension's assumption that array position reflects
+    // creation order. Creation order here is A, B, C; only A is recomputed
+    // (e.g. its tied vertex moved elsewhere) — A must stay first.
+    const features = [dimFeature("A"), dimFeature("B"), dimFeature("C")];
+    const rebuiltA = dimFeature("A");
+    const next = spliceRebuiltDimensionGroups(features, new Map([["A", [rebuiltA]]]));
+
+    const order = next.map((f) => (f.properties as Record<string, unknown>).dimensionId);
+    assert.deepEqual(order, ["A", "B", "C"]);
+    assert.equal(next[0], rebuiltA);
+  });
+
+  it("replaces every original part of a multi-feature group at the first part's position", () => {
+    const features = [
+      dimFeature("A", "extension"),
+      dimFeature("A", "line"),
+      dimFeature("B", "label"),
+    ];
+    const rebuiltA = [dimFeature("A", "extension"), dimFeature("A", "line"), dimFeature("A", "label")];
+    const next = spliceRebuiltDimensionGroups(features, new Map([["A", rebuiltA]]));
+
+    assert.deepEqual(
+      next.map((f) => (f.properties as Record<string, unknown>).dimensionId),
+      ["A", "A", "A", "B"],
+    );
+  });
+
+  it("leaves features unchanged when no group was rebuilt", () => {
+    const features = [dimFeature("A"), dimFeature("B")];
+    const next = spliceRebuiltDimensionGroups(features, new Map());
+    assert.deepEqual(next, features);
   });
 });
 

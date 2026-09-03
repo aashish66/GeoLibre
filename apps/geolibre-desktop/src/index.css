@@ -1307,11 +1307,6 @@ body,
   color: hsl(var(--primary-foreground));
 }
 
-.geolibre-dimensions-control button.is-disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
-}
-
 .geolibre-dimensions-control .geolibre-dimensions-collapse {
   border-bottom: 1px solid hsl(var(--border));
 }

@@ -167,9 +167,11 @@ export interface ParsedAssociativeDimension {
 export function parseAssociativeDimension(
   props: Record<string, unknown> | undefined,
 ): ParsedAssociativeDimension | null {
-  const kind = props?.__dimension;
-  const expectedPointCount = kind === "angular" ? 3 : kind === "linear" ? 2 : null;
-  if (expectedPointCount === null) return null;
+  const rawKind = props?.__dimension;
+  const kind: DimensionTool | null =
+    rawKind === "linear" ? "linear" : rawKind === "angular" ? "angular" : null;
+  if (kind === null) return null;
+  const expectedPointCount = kind === "angular" ? 3 : 2;
 
   const ties = props?.ties;
   if (!Array.isArray(ties) || ties.length !== expectedPointCount || !ties.some(Boolean)) {

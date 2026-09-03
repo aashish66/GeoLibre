@@ -261,7 +261,11 @@ describe("spliceRebuiltDimensionGroups", () => {
       dimFeature("A", "line"),
       dimFeature("B", "label"),
     ];
-    const rebuiltA = [dimFeature("A", "extension"), dimFeature("A", "line"), dimFeature("A", "label")];
+    const rebuiltA = [
+      dimFeature("A", "extension"),
+      dimFeature("A", "line"),
+      dimFeature("A", "label"),
+    ];
     const next = spliceRebuiltDimensionGroups(features, new Map([["A", rebuiltA]]));
 
     assert.deepEqual(

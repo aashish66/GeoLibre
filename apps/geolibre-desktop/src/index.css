@@ -1297,9 +1297,14 @@ body,
   margin: 0 auto;
 }
 
+/* `!important`: MapLibre's own `.maplibregl-ctrl button:not(:disabled):hover`
+ * rule has the same specificity and loads after index.css (via MapCanvas's
+ * maplibre-gl.css import), so it otherwise wins the cascade tie and replaces
+ * this background with its own low-contrast `rgba(0,0,0,.05)`, making the
+ * icon nearly disappear on hover. */
 .geolibre-dimensions-control button:not(.is-active):hover {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
 }
 
 .geolibre-dimensions-control button.is-active {
@@ -1327,7 +1332,11 @@ body,
   border-top: 1px solid hsl(var(--border));
   cursor: pointer;
   height: 24px;
-  margin: 2px auto;
+  /* Flush against the same left edge the tool icons sit at (they fill the
+   * full `--geolibre-dimensions-cell-size` column width and center their
+   * icon within it), not centered across the toolbar's full width — which
+   * is set by the wider unit `<select>` and made the swatch look adrift. */
+  margin: 2px 0 2px 2.5px;
   padding: 0;
   width: 24px;
 }

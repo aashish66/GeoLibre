@@ -50,7 +50,7 @@ const PREVIEW_LINE_LAYER_ID = "geolibre-dimension-preview-line";
 const PREVIEW_TEXT_LAYER_ID = "geolibre-dimension-preview-text";
 const DIMENSION_TOOLS_ID = "geolibre-dimension-tools";
 
-const DEFAULT_COLOR = "#1d4ed8";
+const DEFAULT_COLOR = "#000000";
 const DEFAULT_WIDTH = 2;
 const WIDTH_VALUES = [1, 2, 3] as const;
 const ARROW_LENGTH_PX = 14;
@@ -657,6 +657,8 @@ export interface DimensionLabels {
   deleteLast: string;
   clearAll: string;
   newLayer: string;
+  /** Confirmation prompt before "Clear all dimensions" deletes the layer, given how many dimensions it holds. */
+  confirmClearAll: (count: number) => string;
 }
 
 let labels: DimensionLabels = {
@@ -676,6 +678,10 @@ let labels: DimensionLabels = {
   deleteLast: "Delete last dimension",
   clearAll: "Clear all dimensions",
   newLayer: "New dimension layer",
+  confirmClearAll: (count) =>
+    count === 1
+      ? "Delete this dimension? This cannot be undone."
+      : `Delete all ${count} dimensions in this layer? This cannot be undone.`,
 };
 
 export function setDimensionLabels(next: Partial<DimensionLabels>): void {
@@ -1289,10 +1295,23 @@ function deleteLastDimension(): void {
   });
 }
 
+/** Distinct dimensions in a Dimensions layer, grouped by `dimensionId`. */
+function countDimensionGroups(features: Feature[]): number {
+  const ids = new Set<string>();
+  for (const feature of features) {
+    const id = (feature.properties as Record<string, unknown> | null)?.dimensionId;
+    if (typeof id === "string") ids.add(id);
+  }
+  return ids.size;
+}
+
 function clearAllDimensions(): void {
   const store = useAppStore.getState();
   const layer = findDimensionLayer(store.layers);
   if (!layer) return;
+  const count = countDimensionGroups((layer.geojson?.features as Feature[] | undefined) ?? []);
+  // Nothing to lose: don't prompt over an empty (just-created) layer.
+  if (count > 0 && !window.confirm(labels.confirmClearAll(count))) return;
   store.removeLayer(layer.id);
   dimensionLayerId = null;
 }

@@ -3984,7 +3984,9 @@
     },
     "deleteLast": "Delete last dimension",
     "clearAll": "Clear all dimensions",
-    "newLayer": "New dimension layer"
+    "newLayer": "New dimension layer",
+    "confirmClearAll_one": "Delete this dimension? This cannot be undone.",
+    "confirmClearAll_other": "Delete all {{count}} dimensions in this layer? This cannot be undone."
   },
   "pythonConsole": {
     "title": "Python Console",

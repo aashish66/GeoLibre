@@ -304,6 +304,7 @@ export function TopToolbar({
       deleteLast: t("dimensions.deleteLast"),
       clearAll: t("dimensions.clearAll"),
       newLayer: t("dimensions.newLayer"),
+      confirmClearAll: (count) => t("dimensions.confirmClearAll", { count }),
     });
     setMapillaryLabels({
       title: t("mapillary.title"),

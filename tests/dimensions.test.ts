@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import { parseHTML } from "linkedom";
 import type { IControl } from "maplibre-gl";
 import type { Feature } from "geojson";
+import { useAppStore, DEFAULT_LAYER_STYLE } from "@geolibre/core";
 import {
+  DIMENSIONS_SOURCE_KIND,
   flattenFeatureVertices,
   formatAngle,
   formatDistance,
@@ -363,5 +365,141 @@ describe("dimension toolbar", () => {
 
     toggle.click();
     assert.equal(tools.hidden, false);
+  });
+});
+
+describe("clear all dimensions confirmation", () => {
+  let restoreGlobals: () => void;
+  let control: IControl | null;
+  let app: GeoLibreAppAPI;
+
+  function seedDimensionLayer(dimensionIds: string[]): void {
+    useAppStore.getState().addLayer({
+      id: "test-dimension-layer",
+      name: "Dimensions",
+      type: "geojson",
+      source: { type: "geojson" },
+      visible: true,
+      opacity: 1,
+      style: { ...DEFAULT_LAYER_STYLE, simpleStyleEnabled: true },
+      metadata: { sourceKind: DIMENSIONS_SOURCE_KIND },
+      geojson: {
+        type: "FeatureCollection",
+        features: dimensionIds.map((dimensionId) => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [0, 0] },
+          properties: { dimensionId },
+        })),
+      },
+    });
+  }
+
+  function findActionButton(container: HTMLElement, label: string): HTMLButtonElement {
+    const buttons = [...container.querySelectorAll<HTMLButtonElement>(".geolibre-dimensions-action")];
+    const match = buttons.find((button) => button.getAttribute("aria-label") === label);
+    assert.ok(match, `no action button labeled "${label}"`);
+    return match as HTMLButtonElement;
+  }
+
+  beforeEach(() => {
+    const { document, window } = parseHTML("<html><body></body></html>");
+    const previousDocument = globalThis.document;
+    const previousWindow = globalThis.window;
+    Object.assign(globalThis, { document, window });
+    restoreGlobals = () => {
+      Object.assign(globalThis, { document: previousDocument, window: previousWindow });
+    };
+
+    useAppStore.setState({ layers: [] });
+    control = null;
+    app = {
+      addMapControl: (nextControl) => {
+        control = nextControl;
+        return true;
+      },
+      removeMapControl: (removedControl) => removedControl.onRemove(),
+      getMap: () => null,
+    } as GeoLibreAppAPI;
+
+    setDimensionLabels({
+      clearAll: "Clear all dimensions",
+      confirmClearAll: (count) =>
+        count === 1
+          ? "Delete this dimension? This cannot be undone."
+          : `Delete all ${count} dimensions in this layer? This cannot be undone.`,
+    });
+    maplibreDimensionsPlugin.activate(app);
+  });
+
+  afterEach(() => {
+    maplibreDimensionsPlugin.deactivate(app);
+    useAppStore.setState({ layers: [] });
+    restoreGlobals();
+  });
+
+  it("keeps the layer when the user cancels the confirmation", () => {
+    seedDimensionLayer(["A", "B"]);
+    assert.ok(control);
+    const container = control!.onAdd(null as never);
+    const clearAll = findActionButton(container, "Clear all dimensions");
+
+    const originalConfirm = globalThis.window.confirm;
+    let promptedMessage = "";
+    globalThis.window.confirm = (message?: string) => {
+      promptedMessage = message ?? "";
+      return false;
+    };
+    try {
+      clearAll.click();
+    } finally {
+      globalThis.window.confirm = originalConfirm;
+    }
+
+    assert.match(promptedMessage, /Delete all 2 dimensions/);
+    assert.ok(useAppStore.getState().layers.some((layer) => layer.id === "test-dimension-layer"));
+  });
+
+  it("removes the layer when the user confirms", () => {
+    seedDimensionLayer(["A"]);
+    assert.ok(control);
+    const container = control!.onAdd(null as never);
+    const clearAll = findActionButton(container, "Clear all dimensions");
+
+    const originalConfirm = globalThis.window.confirm;
+    let promptedMessage = "";
+    globalThis.window.confirm = (message?: string) => {
+      promptedMessage = message ?? "";
+      return true;
+    };
+    try {
+      clearAll.click();
+    } finally {
+      globalThis.window.confirm = originalConfirm;
+    }
+
+    assert.match(promptedMessage, /Delete this dimension\?/);
+    assert.ok(!useAppStore.getState().layers.some((layer) => layer.id === "test-dimension-layer"));
+  });
+
+  it("does not prompt for an already-empty dimension layer", () => {
+    seedDimensionLayer([]);
+    assert.ok(control);
+    const container = control!.onAdd(null as never);
+    const clearAll = findActionButton(container, "Clear all dimensions");
+
+    const originalConfirm = globalThis.window.confirm;
+    let confirmCalled = false;
+    globalThis.window.confirm = () => {
+      confirmCalled = true;
+      return false;
+    };
+    try {
+      clearAll.click();
+    } finally {
+      globalThis.window.confirm = originalConfirm;
+    }
+
+    assert.equal(confirmCalled, false);
+    assert.ok(!useAppStore.getState().layers.some((layer) => layer.id === "test-dimension-layer"));
   });
 });

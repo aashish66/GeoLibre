@@ -50,7 +50,7 @@ const PREVIEW_LINE_LAYER_ID = "geolibre-dimension-preview-line";
 const PREVIEW_TEXT_LAYER_ID = "geolibre-dimension-preview-text";
 const DIMENSION_TOOLS_ID = "geolibre-dimension-tools";
 
-const DEFAULT_COLOR = "#000000";
+const DEFAULT_COLOR = "#1d4ed8";
 const DEFAULT_WIDTH = 2;
 const WIDTH_VALUES = [1, 2, 3] as const;
 const ARROW_LENGTH_PX = 14;

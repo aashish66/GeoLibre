@@ -1322,8 +1322,7 @@ body,
 
 .geolibre-dimensions-control .geolibre-dimensions-tools button + button,
 .geolibre-dimensions-control .geolibre-dimensions-width,
-.geolibre-dimensions-control .geolibre-dimensions-color,
-.geolibre-dimensions-control .geolibre-dimensions-unit {
+.geolibre-dimensions-control .geolibre-dimensions-color {
   border-top: 1px solid hsl(var(--border));
 }
 
@@ -1342,23 +1341,57 @@ body,
 }
 
 .geolibre-dimensions-control .geolibre-dimensions-unit {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  /* Matches @geolibre/ui's own <Input>: transparent fill + a `--input`
+   * border, not a filled surface color. An earlier attempt filled it with
+   * `--secondary`, but that token is nearly as dark as the panel itself in
+   * the dark theme (and in every color theme — only `--primary`/`--accent`
+   * shift with the user's theme choice, not the neutral surface tokens), so
+   * it still read as a stray black box. Transparent + a clearly visible
+   * border is both lighter-weight and what the rest of the app already does
+   * for a form control sitting on a themed surface. */
+  background-color: transparent;
+  border: 1px solid hsl(var(--input));
+  border-radius: 6px;
+  /* `!important`: with `color-scheme: dark` set below, Chromium/WebView2 can
+   * paint the select's own closed-state text (not the open <option> popup,
+   * which renders through a different, CSS-respecting path) from its native
+   * dark-mode "field text" color instead of this declaration, reading as
+   * near-black-on-transparent. Same class of cascade fight as the button
+   * hover fix above, same fix. */
+  color: hsl(var(--foreground)) !important;
   cursor: pointer;
   font-size: 11px;
-  min-width: 110px;
+  font-weight: 500;
+  margin: 4px;
   max-width: 160px;
-  padding: 4px;
+  min-width: 110px;
+  padding: 4px 28px 4px 8px;
+  /* Same technique as .maplibre-gl-zarr-layer-select: the native disclosure
+   * arrow's color is unreliable across webviews even with `color-scheme`
+   * set, so replace it with a CSS-drawn chevron tinted from `color`,
+   * guaranteeing it's visible regardless of theme. */
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, hsl(var(--foreground)) 50%),
+    linear-gradient(135deg, hsl(var(--foreground)) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 50%,
+    calc(100% - 11px) 50%;
+  background-repeat: no-repeat;
+  background-size: 5px 5px;
 }
 
-/* Same fix as the graticule panel above: `color-scheme` alone is unreliable
- * across webviews, so the popup `<option>` list needs its own explicit
- * background/color too, or it can render with the browser's light-mode
- * chrome — invisible dark-on-dark text in the dark theme — even though the
- * closed select above already follows the design tokens. */
+/* The open <option> popup can't be transparent (it floats over whatever's
+ * behind it, not the toolbar), so give it a real surface: `--popover` /
+ * `--popover-foreground` are the tokens @geolibre/ui's own DropdownMenuContent
+ * uses for this exact floating-menu-surface role, matching the rest of the
+ * app's dropdowns instead of inventing a one-off color here. `color-scheme`
+ * alone is unreliable across webviews for this (see the graticule panel
+ * above), hence the explicit background/color. */
 .geolibre-dimensions-control .geolibre-dimensions-unit option {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  font-weight: 500;
 }
 
 .dark .geolibre-dimensions-control .geolibre-dimensions-unit {

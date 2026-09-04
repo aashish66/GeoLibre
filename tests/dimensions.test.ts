@@ -395,7 +395,9 @@ describe("clear all dimensions confirmation", () => {
   }
 
   function findActionButton(container: HTMLElement, label: string): HTMLButtonElement {
-    const buttons = [...container.querySelectorAll<HTMLButtonElement>(".geolibre-dimensions-action")];
+    const buttons = [
+      ...container.querySelectorAll<HTMLButtonElement>(".geolibre-dimensions-action"),
+    ];
     const match = buttons.find((button) => button.getAttribute("aria-label") === label);
     assert.ok(match, `no action button labeled "${label}"`);
     return match as HTMLButtonElement;

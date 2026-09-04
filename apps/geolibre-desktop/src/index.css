@@ -1298,10 +1298,10 @@ body,
 }
 
 /* `!important`: MapLibre's own `.maplibregl-ctrl button:not(:disabled):hover`
- * rule has the same specificity and loads after index.css (via MapCanvas's
- * maplibre-gl.css import), so it otherwise wins the cascade tie and replaces
- * this background with its own low-contrast `rgba(0,0,0,.05)`, making the
- * icon nearly disappear on hover. */
+ * rule is *more* specific than a plain `.geolibre-dimensions-control button`
+ * rule (two pseudo-classes vs. none), so it otherwise wins outright and
+ * replaces this background with its own low-contrast `rgba(0,0,0,.05)`,
+ * making the icon nearly disappear on hover. */
 .geolibre-dimensions-control button:not(.is-active):hover {
   background-color: hsl(var(--accent)) !important;
   color: hsl(var(--accent-foreground)) !important;
@@ -1310,6 +1310,19 @@ body,
 .geolibre-dimensions-control button.is-active {
   background-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
+}
+
+/* Same fight as above, but for a button that's both active and hovered: the
+ * `:not(.is-active):hover` rule above deliberately excludes `.is-active`
+ * buttons (so hovering an active tool doesn't wash out its highlight color),
+ * but that also means nothing was countering MapLibre's own hover rule for
+ * them, and `.is-active` alone (no `!important`) is not specific enough to
+ * beat it. Confirmed in a real browser: without this, an active tool's solid
+ * `--primary` background reverted to MapLibre's near-transparent black the
+ * moment it was hovered. */
+.geolibre-dimensions-control button.is-active:hover {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
 }
 
 .geolibre-dimensions-control .geolibre-dimensions-collapse {

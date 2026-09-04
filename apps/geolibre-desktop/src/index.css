@@ -1351,6 +1351,20 @@ body,
   padding: 4px;
 }
 
+/* Same fix as the graticule panel above: `color-scheme` alone is unreliable
+ * across webviews, so the popup `<option>` list needs its own explicit
+ * background/color too, or it can render with the browser's light-mode
+ * chrome — invisible dark-on-dark text in the dark theme — even though the
+ * closed select above already follows the design tokens. */
+.geolibre-dimensions-control .geolibre-dimensions-unit option {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.dark .geolibre-dimensions-control .geolibre-dimensions-unit {
+  color-scheme: dark;
+}
+
 /*
  * The Measure, Bookmark and View State controls theme themselves purely via
  * `@media (prefers-color-scheme)`, so they follow the OS preference instead of
